@@ -1,0 +1,5 @@
+{
+  "version": "0.2.6",
+  "doesClientSideRouting": false,
+  "base": "/web-infra/"
+}

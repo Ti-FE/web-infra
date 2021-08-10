@@ -1,0 +1,1 @@
+import{R as e}from"./vendor.593b5baf.js";function l(){return e.createElement(e.Fragment,null,e.createElement("h1",null,"Welcome"),"This page is:",e.createElement("ul",null,e.createElement("li",null,"Rendered to HTML.")))}export{l as Page};
