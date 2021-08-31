@@ -2,5 +2,6 @@ node_modules/
 .DS_Store
 dist/
 *.log
-/.idea/
-/packages/site/src/docs.generated.json
+.idea/
+.vscode/
+*.generated.json
