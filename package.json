@@ -5,7 +5,8 @@
   "description": "Web infras for PingCAP FE team",
   "scripts": {
     "prepare": "is-ci || husky install",
-    "generate-changelog": "changeset version && node scripts/changelog.mjs"
+    "generate-changelog": "changeset version && node scripts/changelog.mjs",
+    "publish": "changeset publish"
   },
   "license": "MIT",
   "workspaces": [
