@@ -6,9 +6,9 @@ const Link: React.FC<{ href: string }> = ({ href, children }) => {
   const dispatch = useAppDispatch()
   const changeRoute = useCallback(() => {
     if (href.startsWith('#')) {
-      dispatch(actions.setRoute(href.slice(1)))
+      dispatch(actions.setRoute({ target: href.slice(1), from: 'click' }))
     } else {
-      dispatch(actions.setRoute(href))
+      dispatch(actions.setRoute({ target: href, from: 'click' }))
     }
   }, [href])
 
