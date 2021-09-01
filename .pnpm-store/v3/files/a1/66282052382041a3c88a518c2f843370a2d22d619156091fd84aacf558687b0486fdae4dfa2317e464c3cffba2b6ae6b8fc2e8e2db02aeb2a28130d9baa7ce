@@ -1,0 +1,60 @@
+'use strict';
+
+const path = require('path');
+const fs = require('fs');
+const _debug = require('debug');
+const vite = require('vite');
+
+function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+
+function _interopNamespace(e) {
+  if (e && e.__esModule) return e;
+  var n = Object.create(null);
+  if (e) {
+    Object.keys(e).forEach(function (k) {
+      if (k !== 'default') {
+        var d = Object.getOwnPropertyDescriptor(e, k);
+        Object.defineProperty(n, k, d.get ? d : {
+          enumerable: true,
+          get: function () {
+            return e[k];
+          }
+        });
+      }
+    });
+  }
+  n['default'] = e;
+  return Object.freeze(n);
+}
+
+const _debug__default = /*#__PURE__*/_interopDefaultLegacy(_debug);
+
+const debug = _debug__default['default']("vite-plugin-package-config");
+function VitePluginPackageConfig(options = {}) {
+  const {
+    packageJsonPath = path.join(process.cwd(), "package.json"),
+    field = "vite"
+  } = options;
+  return {
+    name: "vite-plugin-package-config",
+    async config(_config) {
+      var _a;
+      if (!fs.existsSync(packageJsonPath)) {
+        debug("package.json not found");
+        return;
+      }
+      debug(`loading package.json at ${packageJsonPath}`);
+      const packageJson = await Promise.resolve().then(function () { return /*#__PURE__*/_interopNamespace(require(packageJsonPath)); });
+      const extend = (_a = packageJson.default) == null ? void 0 : _a[field];
+      if (!extend) {
+        debug(`no "${field}" field found in package.json, skip`);
+        return;
+      }
+      debug("merging config with");
+      debug(extend);
+      return vite.mergeConfig(_config, extend);
+    }
+  };
+}
+
+module.exports = VitePluginPackageConfig;
