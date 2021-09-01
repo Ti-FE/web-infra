@@ -3,9 +3,9 @@
   "version": "0.1.1",
   "private": true,
   "scripts": {
-    "start": "yarn build:doc && vite",
+    "start": "npm run build:doc && vite",
     "serve": "vite preview",
-    "build": "yarn build:doc && tsc && vite build",
+    "build": "npm run build:doc && tsc && vite build",
     "build:doc": "node ./scripts/crawler.mjs"
   },
   "license": "MIT",

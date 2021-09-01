@@ -1,9 +1,14 @@
-name: Build and Deploy
+name: Build and Deploy site
+
 on:
   push:
     paths:
       - 'packages/site/**'
   workflow_dispatch:
+
+env:
+  CI: true
+  PNPM_CACHE_FOLDER: .pnpm-store
 
 jobs:
   build-and-deploy:
@@ -12,10 +17,21 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v2.3.1
 
+      - name: Setup pnpm config
+        run: pnpm config set store-dir $PNPM_CACHE_FOLDER
+
+      - name: Cache pnpm modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-
+
       - name: Install and Build 🔧
         run: |
-          yarn
-          yarn workspace @ti-fe/site build
+          pnpm install
+          pnpm build --filter "@ti-fe/site"
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@4.1.4
