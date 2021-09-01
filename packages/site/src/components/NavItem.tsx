@@ -16,6 +16,7 @@ const NavItem: React.FC<
   const dispatch = useAppDispatch()
   const currentRoute = useAppSelector(state => state.routes.route)
   const changeRoute = useCallback(() => {
+    if (route === currentRoute) return
     dispatch(actions.setRoute(route))
   }, [route])
 
