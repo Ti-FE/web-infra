@@ -1,4 +1,4 @@
-name: changelog
+name: Generate Changelog
 on:
   push:
     paths:
