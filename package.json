@@ -4,7 +4,8 @@
   "private": true,
   "description": "Web infras for PingCAP FE team",
   "scripts": {
-    "prepare": "is-ci || husky install"
+    "prepare": "is-ci || husky install",
+    "generate-changelog": "changeset version && node scripts/changelog.mjs"
   },
   "license": "MIT",
   "workspaces": [

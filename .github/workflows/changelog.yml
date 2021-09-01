@@ -1,0 +1,57 @@
+name: changelog
+on:
+  push:
+    paths:
+      - ".changeset/**"
+    branches:
+      - master
+env:
+  CI: true
+  PNPM_CACHE_FOLDER: .pnpm-store
+jobs:
+  version:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: install pnpm
+        run: npm i pnpm@latest -g
+
+      - name: setup pnpm config
+        run: pnpm config set store-dir $PNPM_CACHE_FOLDER
+
+      - name: Cache pnpm modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-
+
+      - name: install dependencies
+        run: pnpm install
+
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Generate the new changelog
+        run: |
+          pnpm run generate-changelog
+
+      - name: Commit changelog
+        run: |
+          git add .
+          git diff --staged --quiet || git commit -m "docs(changelog): $GITHUB_SHA"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          delete-branch: true
+          title: "docs: update changelog"
+          branch: docs/changelog-updates
