@@ -6,6 +6,77 @@ Web Infra is a collection of tools for building web based user interface. All to
 
 It is built by PingCAP front-end team and optimized for it's internal collaboration workflows.
 
+## Coding Guideline
+
+import Link from '../components/Link'
+
+We use Prettier to automatically format code, see details at <Link href="#prettier-config">here</Link>. Also all code will be linted by Eslint when commit it to code base, you can find the shared eslint configuration at <Link href="#eslint-config">here</Link>.
+
+There are some common practices were listed here:
+
+- Use TypesScript by default, using JavaScript for some simple scripting is allowed but using it with `//@ts-check` is encouraged.
+
+- Use `const` and `let`, declare all local variables with `const` by default, unless a variable needs to be reassigned. The `var` keyword must not be used.
+
+- Every local variable declaration declares only one variable: declarations such as `let a = 1, b = 2;` are not preferred.
+
+- Use named exports by default, only use default export when exporting a React component.
+
+```typescript
+// AVOID
+export default function someFunction() {}
+```
+
+```typescript
+// PREFER
+export function someFunction() {}
+```
+
+- Avoid `any` where possible. If you find `any`s in code, consider replace it with whether a generic or `unknown`.
+
+- Generally avoid adding boolean arguments to a method in cases where that argument means "do something extra". In these cases, prefer breaking the behavior up into different functions.
+
+```typescript
+// AVOID
+function turnLeftOrRight(dir: boolean = false) {
+  // ...
+}
+```
+
+```typescript
+// PREFER
+function turn(dir: 'left' | 'right' = 'left') {
+  // ...
+}
+```
+
+- Name classes based on their responsibility. Names should capture what the code _does_,
+  not how it is used:
+
+```typescript
+/** NO: */
+class DefaultRouteReuseStrategy {}
+
+/** YES: */
+class NonStoringRouteReuseStrategy {}
+```
+
+- Use `readonly` members wherever possible.
+
+- The name of a method should capture the action performed _by_ that method rather than describing when the method will be called. For example:
+
+```typescript
+/** AVOID: does not describe what the function does. */
+handleClick() {
+  // ...
+}
+
+/** PREFER: describes the action performed by the function. */
+checkClusterInfo() {
+  // ...
+}
+```
+
 
 ## Workflow
 
@@ -76,6 +147,44 @@ refactor!: drop support for Node 6
 - Making it easier for people to contribute to your projects, by allowing them to explore a more structured commit history.
 
 For example, this repo uses changeset and conventional-changelog-cli to generate changelog automatically, you can find details in the [configuration file](https://github.com/ti-fe/web-infra/blob/master/.github/workflows/changelog.yml).
+
+## Naming conventions
+
+For namings, we follow [Microsoft/TypeScript/wiki/Coding-guidelines](Microsoft/TypeScript/wiki/Coding-guidelines) in general. For example:
+
+Classes:
+
+- use PascalCase, the first letter is always uppercase for types.
+- Example: `Car`, `ApplicationMetadata`.
+- In general prefer single words, so it can be expanded by prepend or append other words.
+- Should not end with `Impl` or any other word which describes a specific implementation of an interface.
+
+Interfaces:
+
+- Follow the same rules as Classes.
+- Should not have `I` or `Interface` in the name or any other way of identifying it as an interface. Naming is hard and developers are lazy, this helps us to avoid bad namings. There are some disscussions about this at [TypeScript-Handbook/issues/121](https://github.com/microsoft/TypeScript-Handbook/issues/121) and [stackoverflow](https://stackoverflow.com/questions/31876947/confused-about-the-interface-and-class-coding-guidelines-for-typescript/41967120#41967120).
+
+Methods and functions:
+
+- Example: `bootstrap`, `someMethod`.
+- Should be camel case with first letter lowercase.
+
+Constants:
+
+- Should be all uppercase with SNAKE_CASE.
+- Example: `CORE_DIRECTIVES`.
+
+React Components:
+
+- use PascalCase like classes.
+- Example: `UsageOverview`.
+- One component per file, use the component name as file name, if it is a directory, use it as directory name and export component in index.ts.
+
+Hooks:
+
+- Use camel case, always starts with `use`.
+- Example: `useSomeHook`.
+
 
 ## How to read documentation
 
