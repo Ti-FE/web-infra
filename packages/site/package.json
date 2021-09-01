@@ -1,6 +1,7 @@
 {
   "name": "@ti-fe/site",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "private": true,
   "scripts": {
     "start": "yarn build:doc && vite",
     "serve": "vite preview",
