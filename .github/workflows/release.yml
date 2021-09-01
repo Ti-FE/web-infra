@@ -1,12 +1,7 @@
 name: Publish to NPM
 
 on:
-  push:
-    paths:
-      - ".changeset/**"
-      - "packages/**"
-    branches:
-      - master
+  workflow_dispatch:
 
 env:
   CI: true
