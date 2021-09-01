@@ -27,11 +27,14 @@ const Page = () => {
       const headings = document.querySelectorAll(
         `.site-main-content > h${splitedRouteArray.length}`
       )
-      const el = Array.from(headings).find(heading =>
-        routeSource.target.endsWith(
-          currentPageNavItems.find(i => i.title === heading.textContent)!.route
+      const el = Array.from(headings).find(heading => {
+        const item = currentPageNavItems.find(
+          i => i.title === heading.textContent
         )
-      )
+        if (!item) return false
+
+        return routeSource.target.endsWith(item.route)
+      })
       if (el) {
         el.scrollIntoView()
       }
