@@ -14,10 +14,9 @@ const NavItem: React.FC<
   NavItemData & { className?: string; style?: React.CSSProperties }
 > = ({ title, route, items, className, style, level }) => {
   const dispatch = useAppDispatch()
-  const currentRoute = useAppSelector(state => state.routes.route)
+  const currentRoute = useAppSelector(state => state.routes.route.target)
   const changeRoute = useCallback(() => {
-    if (route === currentRoute) return
-    dispatch(actions.setRoute(route))
+    dispatch(actions.setRoute({ target: route, from: 'click' }))
   }, [route])
 
   const isExpand = useMemo(

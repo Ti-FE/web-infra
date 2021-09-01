@@ -1,4 +1,5 @@
-const modules = import.meta.glob('./docs/*.mdx')
+const modules = import.meta.globEager('./docs/*.mdx')
+
 // eslint-disable-next-line guard-for-in
 for (const path in modules) {
   const normalizedPath = path
