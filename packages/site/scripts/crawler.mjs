@@ -30,12 +30,10 @@ DOCS_ENTRY.forEach(doc => {
   const file = new VFile(content)
   const extractTitle = () => tree =>
     visit(tree, 'heading', node => {
-      if (node.depth > 2) return
-
       const value = node.children[0].value
 
       // ignore heading 1
-      if (node.depth === 2) {
+      if (node.depth >= 2) {
         const parentTitle = findParentTitle(children, node.depth - 1)
         if (parentTitle) {
           children.push(
