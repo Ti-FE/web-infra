@@ -6,7 +6,7 @@
   "scripts": {
     "prepare": "is-ci || husky install",
     "generate-changelog": "changeset version && node scripts/changelog.mjs",
-    "publish": "changeset publish"
+    "release": "changeset publish"
   },
   "license": "MIT",
   "workspaces": [
