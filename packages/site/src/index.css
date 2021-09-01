@@ -118,6 +118,12 @@ body {
   color: #a7b6c2;
 }
 
+.site-main-content ul {
+  list-style-type: disc;
+  padding-left: 14px;
+  line-height: 1.6;
+}
+
 pre {
   /* In theory shiki will overwrite these, but this is to make sure there are defaults regardless */
   background-color: white;
