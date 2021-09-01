@@ -34,7 +34,6 @@
     "unist-util-visit": "^4.0.0",
     "vfile": "^5.0.2",
     "vite": "^2.5.1",
-    "vite-plugin-inspect": "^0.2.1",
     "vite-plugin-mdx": "^3.5.6",
     "vite-plugin-windicss": "^1.2.7",
     "windicss": "^3.1.7"

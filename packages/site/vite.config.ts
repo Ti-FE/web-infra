@@ -2,7 +2,6 @@ import { defineConfig } from 'vite'
 import reactRefresh from '@vitejs/plugin-react-refresh'
 import windicss from 'vite-plugin-windicss'
 import mdx from 'vite-plugin-mdx'
-import inspect from 'vite-plugin-inspect'
 import remarkShikiTwoslash from 'remark-shiki-twoslash'
 import svgr from '@svgr/rollup'
 
@@ -23,7 +22,6 @@ export default defineConfig({
       ],
     }),
     svgr(),
-    inspect(),
   ],
   base: '/web-infra/',
   define: {
