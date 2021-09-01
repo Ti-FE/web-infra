@@ -1,7 +1,6 @@
-import os from 'os'
 import cp from 'child_process'
 import path from 'path'
-import { readFile } from 'fs/promises'
+import { readFileSync } from 'fs'
 import { promisify } from 'util'
 
 import pLimit from 'p-limit'
@@ -11,7 +10,7 @@ const bin = './node_modules/.bin/conventional-changelog'
 const exec = promisify(cp.exec)
 
 const rootPackgeJson = JSON.parse(
-  await readFile(new URL('../package.json', import.meta.url), 'utf-8')
+  readFileSync(new URL('../package.json', import.meta.url), 'utf-8')
 )
 const { workspaces } = rootPackgeJson
 
@@ -20,13 +19,23 @@ const packages = workspaces.map(ws =>
 )
 const entries = fastGlob.sync(packages)
 
-const limit = pLimit(os.cpus().length)
+const limit = pLimit(1)
 
 await Promise.all(
   entries.map(entry => {
     const commitPath = path.dirname(entry)
+    const md = `${commitPath}/CHANGELOG.md`
+    return limit(() => exec(`git checkout HEAD -- ${md}`))
+  })
+)
+
+await Promise.all(
+  entries.map(entry => {
+    const { name } = JSON.parse(readFileSync(entry, 'utf-8'))
+    const commitPath = path.dirname(entry)
     const outfile = `${commitPath}/CHANGELOG.md`
-    const cmd = `${bin} --preset angular --release-count 0 --commit-path ${commitPath} --pkg ${entry} --outfile ${outfile}`
+    const tagPrefix = `${name}@`
+    const cmd = `${bin} --preset angular --commit-path ${commitPath} --pkg ${entry} --infile ${outfile} --same-file --tag-prefix ${tagPrefix}`
     return limit(() => exec(cmd))
   })
 )
