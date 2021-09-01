@@ -61,7 +61,9 @@ const Page = () => {
         })
       })
 
-    ranges[ranges.length - 1].end = 1
+    if (ranges.length > 0) {
+      ranges[ranges.length - 1].end = 1
+    }
 
     function onScroll() {
       const currPercent = window.scrollY / document.body.scrollHeight
