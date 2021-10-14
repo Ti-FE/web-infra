@@ -25,7 +25,7 @@ const defaultLintStagedConfig = `module.exports = {
 }
 `
 
-class GitDoctor extends Doctor {
+export class GitDoctor extends Doctor {
   public name = 'Git'
 
   public getDoctorResult(status: GitStatus) {
@@ -55,8 +55,8 @@ class GitDoctor extends Doctor {
     }
   }
 
-  public async getPreCommitScript() {
-    const root = await shell.getProjectRoot()
+  public getPreCommitScript() {
+    const root = shell.getProjectRoot()
     const cwd = process.cwd()
     const isPackageJsonSameLevelWithGit = root === cwd
 
@@ -64,6 +64,7 @@ class GitDoctor extends Doctor {
       return `npx lint-staged --config ./.lintstagedrc.js`
     }
     const packageJsonPath = `$(pwd)${cwd.replace(root, '')}`
+
     return (
       `export PATH="$PATH:${packageJsonPath}/node_modules/.bin"\n` +
       `linter=${packageJsonPath}/node_modules/.bin/lint-staged\n` +
@@ -74,12 +75,16 @@ class GitDoctor extends Doctor {
   }
 
   public async installHusky() {
-    const logger = createLogger(shell.$.logLevel)
+    const logger = createLogger(shell.logLevel)
     logger.info('Installing husky, lint-staged...')
-    await shell.$`yarn add husky is-ci lint-staged -D`
-    const root = await shell.getProjectRoot()
+    shell.exec(`yarn add husky is-ci lint-staged -D`)
+
+    logger.info('Installed husky, is-ci and lint-staged')
+
+    const root = shell.getProjectRoot()
     const cwd = process.cwd()
     const isPackageJsonSameLevelWithGit = root === cwd
+
     if (isPackageJsonSameLevelWithGit) {
       await shell.setNpmScript('prepare', 'is-ci || husky install')
     } else {
@@ -92,11 +97,14 @@ class GitDoctor extends Doctor {
         )}/.husky`
       )
     }
-    await shell.$`npm run prepare`
+
+    logger.info('Added prepare script to package.json')
+
+    shell.exec(`npm run prepare`)
   }
 
   public async setupLintStaged() {
-    const logger = createLogger(shell.$.logLevel)
+    const logger = createLogger(shell.logLevel)
     logger.info('Setting up lint-staged...')
     await writeFilePreservingEol(
       `${process.cwd()}/.lintstagedrc.js`,
@@ -105,15 +113,15 @@ class GitDoctor extends Doctor {
   }
 
   public async addPreCommitPrettierHook() {
-    const logger = createLogger(shell.$.logLevel)
+    const logger = createLogger(shell.logLevel)
     await this.setupLintStaged()
     logger.info('Adding prettier hooks with husky...')
-    const script = await this.getPreCommitScript()
+    const script = this.getPreCommitScript()
     await shell.addHuskyGitHook('pre-commit', script)
   }
 
   public async fix(status: GitStatus) {
-    const logger = createLogger(shell.$.logLevel)
+    const logger = createLogger(shell.logLevel)
 
     switch (status) {
       case GitStatus.Good:
@@ -148,25 +156,25 @@ class GitDoctor extends Doctor {
   }
 
   protected async getStatus() {
-    if (!(await shell.isInsideGitRepo())) {
+    if (!shell.isInsideGitRepo()) {
       return GitStatus.NotGitRepo
     }
 
-    if (!(await shell.isNpmModuleInstalled('husky'))) {
+    if (!shell.isNpmModuleInstalled('husky')) {
       return GitStatus.HuskyNotInstalled
     }
 
-    const huskyVersion = await shell.getInstalledModuleVersion('husky')
+    const huskyVersion = shell.getInstalledModuleVersion('husky')
     if (semver.satisfies(huskyVersion as string, '<6')) {
       return GitStatus.LegacyHuskyInstalled
     }
 
     if (
-      !(await shell.hasHuskyGitHook('pre-commit', [
+      !shell.hasHuskyGitHook('pre-commit', [
         'prettier',
         'pretty-quick',
         'lint-staged',
-      ]))
+      ])
     ) {
       return GitStatus.PrettierHookNotFound
     }
@@ -178,5 +186,3 @@ class GitDoctor extends Doctor {
     return GitStatus[status]
   }
 }
-
-export const gitDoctor = new GitDoctor()

@@ -44,7 +44,7 @@ async function getEslintConfig() {
   return await explorer.search()
 }
 
-class EslintDoctor extends Doctor {
+export class EslintDoctor extends Doctor {
   public name = 'Eslint'
 
   public getDoctorResult(status: EslintStatus) {
@@ -71,7 +71,7 @@ class EslintDoctor extends Doctor {
   }
 
   public async fix(status: EslintStatus) {
-    const logger = createLogger(shell.$.logLevel)
+    const logger = createLogger(shell.logLevel)
 
     switch (status) {
       case EslintStatus.Good:
@@ -85,7 +85,9 @@ class EslintDoctor extends Doctor {
         return
       case EslintStatus.NotInstalled: {
         logger.info(`Installing eslint related dependencies...`)
-        await shell.$`yarn add -D eslint typescript @typescript-eslint/parser @typescript-eslint/eslint-plugin @ti-fe/eslint-config`
+        shell.exec(
+          `yarn add -D eslint typescript @typescript-eslint/parser @typescript-eslint/eslint-plugin @ti-fe/eslint-config`
+        )
       }
       // eslint-disable-next-line no-fallthrough
       case EslintStatus.ConfigNotFound: {
@@ -114,13 +116,13 @@ class EslintDoctor extends Doctor {
   }
 
   protected async getStatus() {
-    const logger = createLogger(shell.$.logLevel)
+    const logger = createLogger(shell.logLevel)
 
     if (!shell.isFileExist('package.json')) {
       return EslintStatus.NotNpmProject
     }
 
-    if (!(await shell.isNpmModuleInstalled('eslint'))) {
+    if (!shell.isNpmModuleInstalled('eslint')) {
       return EslintStatus.NotInstalled
     }
 
@@ -134,8 +136,10 @@ class EslintDoctor extends Doctor {
         if (!JSON.stringify(result.config).includes('@ti-fe/eslint-config')) {
           return EslintStatus.ConfigNotConsistent
         }
+      } else {
+        logger.info(`Could not find eslint configuration.`)
       }
-    } catch (e) {
+    } catch (e: any) {
       logger.error(e)
       return EslintStatus.ConfigNotFound
     }
@@ -143,5 +147,3 @@ class EslintDoctor extends Doctor {
     return EslintStatus.Good
   }
 }
-
-export const eslintDoctor = new EslintDoctor()

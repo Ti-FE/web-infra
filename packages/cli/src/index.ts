@@ -29,7 +29,7 @@ async function runDoctor(options: GlobalOptions) {
   shell.setLogLevel(options?.logLevel)
   try {
     await doctor()
-  } catch (e) {
+  } catch (e: any) {
     createLogger(options?.logLevel).error(
       chalk.red(`error when running doctor, ${e.message}:\n${e.stack}`)
     )
@@ -56,7 +56,7 @@ cli
     shell.setLogLevel(options?.logLevel)
     try {
       await fix()
-    } catch (e) {
+    } catch (e: any) {
       createLogger(options?.logLevel).error(
         chalk.red(`error when running fix, ${e.message}:\n${e.stack}`)
       )
@@ -73,7 +73,7 @@ cli
     shell.setLogLevel(options?.logLevel)
     try {
       await review(pr, { clean: options.clean })
-    } catch (e) {
+    } catch (e: any) {
       createLogger(options?.logLevel).error(
         chalk.red(`error when running review, ${e.message}:\n${e.stack}`)
       )
@@ -96,12 +96,19 @@ cli
     const { schema, group, output } = options
     try {
       await codegen({ schema, group, output })
-    } catch (e) {
+    } catch (e: any) {
       createLogger(options?.logLevel).error(
         chalk.red(`error when running generate, ${e.message}:\n${e.stack}`)
       )
       process.exit(1)
     }
+  })
+
+cli
+  // Simply omit the command name, just brackets
+  .command('[command]', 'Run commands')
+  .action((files, options) => {
+    cli.outputHelp()
   })
 
 cli.help()

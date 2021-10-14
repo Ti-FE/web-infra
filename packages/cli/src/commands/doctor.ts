@@ -1,12 +1,14 @@
 import { DoctorResult, resultLevelToLogSymbol } from '../utils/common'
 import { createLogger } from '../utils/logger'
 import * as shell from '../utils/shell'
-
-import { prettierDoctor } from './prettier'
-import { gitDoctor } from './git'
-import { eslintDoctor } from './eslint'
+import { PrettierDoctor } from '../doctors/prettier'
+import { GitDoctor } from '../doctors/git'
+import { EslintDoctor } from '../doctors/eslint'
 
 export async function doctor() {
+  const prettierDoctor = new PrettierDoctor()
+  const gitDoctor = new GitDoctor()
+  const eslintDoctor = new EslintDoctor()
   const results = []
 
   const prettierStatus = await prettierDoctor.check()
@@ -21,7 +23,7 @@ export async function doctor() {
 }
 
 export function printResult(results: DoctorResult[]) {
-  const logger = createLogger(shell.$.logLevel)
+  const logger = createLogger(shell.logLevel)
 
   results.forEach(r => {
     const level = r.type === 'success' ? 'info' : r.type

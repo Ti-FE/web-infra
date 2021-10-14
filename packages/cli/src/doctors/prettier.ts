@@ -46,7 +46,7 @@ const defaultPrettierConfig = `module.exports = {
 }
 `
 
-class PrettierDoctor extends Doctor {
+export class PrettierDoctor extends Doctor {
   public name = 'Prettier'
 
   public getDoctorResult(status: PrettierStatus) {
@@ -77,7 +77,7 @@ class PrettierDoctor extends Doctor {
   }
 
   public async fix(status: PrettierStatus) {
-    const logger = createLogger(shell.$.logLevel)
+    const logger = createLogger(shell.logLevel)
     switch (status) {
       case PrettierStatus.Good:
         return
@@ -90,12 +90,12 @@ class PrettierDoctor extends Doctor {
         return
       case PrettierStatus.NotInstalled: {
         logger.info(`Installing prettier...`)
-        await shell.$`yarn add prettier -D`
+        shell.exec(`yarn add prettier -D`)
       }
       // eslint-disable-next-line no-fallthrough
       case PrettierStatus.PrettierConfigNotFound: {
         logger.info(`Setting up prettier configuration...`)
-        await shell.$`yarn add ${prettierConfig.name} -D`
+        shell.exec(`yarn add ${prettierConfig.name} -D`)
         await fs.writeFilePreservingEol(
           `${process.cwd()}/.prettierrc.js`,
           defaultPrettierConfig
@@ -111,13 +111,13 @@ class PrettierDoctor extends Doctor {
   }
 
   protected async getStatus() {
-    const logger = createLogger(shell.$.logLevel)
+    const logger = createLogger(shell.logLevel)
 
     if (!shell.isFileExist('package.json')) {
       return PrettierStatus.NotNpmProject
     }
 
-    if (!(await shell.isNpmModuleInstalled('prettier'))) {
+    if (!shell.isNpmModuleInstalled('prettier')) {
       return PrettierStatus.NotInstalled
     }
 
@@ -129,8 +129,10 @@ class PrettierDoctor extends Doctor {
         delete result.config.$schema
 
         // TODO compare config and find inconsistency
+      } else {
+        logger.info(`Could not found prettier configuration`)
       }
-    } catch (e) {
+    } catch (e: any) {
       logger.error(e)
       return PrettierStatus.PrettierConfigNotFound
     }
@@ -142,5 +144,3 @@ class PrettierDoctor extends Doctor {
     return PrettierStatus[status]
   }
 }
-
-export const prettierDoctor = new PrettierDoctor()

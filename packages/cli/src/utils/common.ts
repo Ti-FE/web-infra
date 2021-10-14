@@ -17,7 +17,10 @@ export const resultLevelToLogSymbol: Record<DoctorResultType, string> = {
   warn: logSymbols.warning,
 }
 
-export function createDoctorResult(type: DoctorResultType, res: string): DoctorResult {
+export function createDoctorResult(
+  type: DoctorResultType,
+  res: string
+): DoctorResult {
   let result
   if (type === 'error') {
     result = chalk.red(res)
@@ -34,7 +37,7 @@ export abstract class Doctor {
   public abstract name: string
 
   public async check() {
-    const logger = createLogger(shell.$.logLevel)
+    const logger = createLogger(shell.logLevel)
     logger.info(`Checking ${this.name} status...`)
     const res = await this.getStatus()
     logger.info(`${this.name} status: ${this.getDescriptiveStatus(res)}`)

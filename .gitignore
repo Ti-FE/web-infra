@@ -6,3 +6,4 @@ dist/
 .vscode/
 *.generated.json
 .pnpm-store/
+.parcel-cache/

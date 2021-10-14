@@ -4,7 +4,7 @@ import { parse as tomlParse } from '@iarna/toml'
 export function json5(filePath: string, content: string) {
   try {
     return JSON5.parse(content)
-  } catch (error) {
+  } catch (error: any) {
     error.message = `JSON5 Error in ${filePath}:\n${error.message}`
     throw error
   }
@@ -13,7 +13,7 @@ export function json5(filePath: string, content: string) {
 export function toml(filePath: string, content: string) {
   try {
     return tomlParse(content)
-  } catch (error) {
+  } catch (error: any) {
     error.message = `TOML Error in ${filePath}:\n${error.message}`
     throw error
   }

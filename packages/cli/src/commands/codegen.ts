@@ -20,8 +20,9 @@ export async function codegen(options: CodegenOptions) {
   }
 
   const schemaAbsPath = path.resolve(process.cwd(), options.schema)
-  const { stdout: code } =
-    await shell.$`npx @rtk-incubator/rtk-query-codegen-openapi ${schemaAbsPath}`
+  const { stdout: code } = shell.exec(
+    `npx @rtk-incubator/rtk-query-codegen-openapi ${schemaAbsPath}`
+  )
 
   const sourceFile = ts.createSourceFile('api.ts', code, ts.ScriptTarget.ESNext)
   const models = options.group
@@ -75,25 +76,6 @@ function traverse(
   streamMap.forEach(i => i.close())
   streamMap.clear()
   typeDefinitionsMap.clear()
-}
-
-function createImportDeclaration(importSpecifier: string, pathString: string) {
-  const { factory } = ts
-  return factory.createImportDeclaration(
-    undefined,
-    undefined,
-    factory.createImportClause(
-      true,
-      undefined,
-      factory.createNamedImports([
-        factory.createImportSpecifier(
-          undefined,
-          factory.createIdentifier(importSpecifier)
-        ),
-      ])
-    ),
-    factory.createStringLiteral(pathString)
-  )
 }
 
 function print(stream: fs.WriteStream, nodes: ts.Node[]) {

@@ -1,12 +1,14 @@
 import * as shell from '../utils/shell'
 import { createLogger } from '../utils/logger'
-
-import { prettierDoctor } from './prettier'
-import { gitDoctor } from './git'
-import { eslintDoctor } from './eslint'
+import { PrettierDoctor } from '../doctors/prettier'
+import { GitDoctor } from '../doctors/git'
+import { EslintDoctor } from '../doctors/eslint'
 
 export async function fix() {
-  const logger = createLogger(shell.$.logLevel)
+  const logger = createLogger(shell.logLevel)
+  const prettierDoctor = new PrettierDoctor()
+  const gitDoctor = new GitDoctor()
+  const eslintDoctor = new EslintDoctor()
 
   const prettierStatus = await prettierDoctor.check()
   await prettierDoctor.fix(prettierStatus)
