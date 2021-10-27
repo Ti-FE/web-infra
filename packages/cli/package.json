@@ -13,8 +13,8 @@
     }
   },
   "scripts": {
-    "build": "parcel build --no-scope-hoist",
-    "watch": "parcel watch",
+    "build": "tsup src/index.ts --minify",
+    "watch": "tsup src/index.ts --watch src",
     "prebuild": "rimraf dist",
     "prepublish": "npm run build"
   },
@@ -55,10 +55,10 @@
     "detect-indent": "^7.0.0",
     "json5": "^2.2.0",
     "log-symbols": "^5.0.0",
-    "parcel": "^2.0.0",
     "prompts": "^2.4.1",
     "rimraf": "^3.0.2",
     "semver": "^7.3.5",
+    "tsup": "^5.5.0",
     "typescript": "^4.3.5"
   }
 }
