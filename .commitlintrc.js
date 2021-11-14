@@ -11,9 +11,25 @@ const scopes = entries
   .filter(Boolean)
   .map(name => (name.charAt(0) === '@' ? name.split('/')[1] : name))
 
+const commitTypes = [
+  'build',
+  'chore',
+  'ci',
+  'docs',
+  'feat',
+  'fix',
+  'perf',
+  'refactor',
+  'revert',
+  'style',
+  'test',
+  'release',
+]
+
 module.exports = {
   extends: ['@commitlint/config-conventional'],
   rules: {
+    'type-enum': [2, 'always', commitTypes],
     'scope-enum': [2, 'always', scopes],
   },
 }
