@@ -2,17 +2,19 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 
+import {
+  generateEndpoints,
+  ConfigFile,
+  parseConfig,
+} from '@rtk-query/codegen-openapi'
 import * as ts from 'typescript'
-
-import * as shell from '../utils/shell'
 
 export interface CodegenOptions {
   schema?: string
   group?: string
   output?: string
+  hook?: boolean
 }
-
-const defaultModelFile = 'index'
 
 export async function codegen(options: CodegenOptions) {
   if (!options.schema) {
@@ -20,65 +22,83 @@ export async function codegen(options: CodegenOptions) {
   }
 
   const schemaAbsPath = path.resolve(process.cwd(), options.schema)
-  const { stdout: code } = shell.exec(
-    `npx @rtk-incubator/rtk-query-codegen-openapi ${schemaAbsPath}`
-  )
-
-  const sourceFile = ts.createSourceFile('api.ts', code, ts.ScriptTarget.ESNext)
   const models = options.group
     ? options.group.split(',').map(i => i.toLowerCase())
     : []
 
-  traverse(sourceFile, models, options.output)
+  const config: any = {
+    apiFile: './api.ts',
+    schemaFile: schemaAbsPath,
+    hooks: options.hook ?? true,
+  }
+
+  if (models.length > 0) {
+    config.outputFiles = models.reduce((acc, name) => {
+      const filePath = path.join(options.output ?? '.', `${name}.ts`)
+      acc[filePath] = {
+        filterEndpoints: [new RegExp(`${name}`, 'i')],
+      }
+      return acc
+    }, {} as any)
+
+    for (const c of parseConfig(config)) {
+      const { outputFile, ...rest } = c
+      await generateFile(rest as ConfigFile, outputFile, !options.hook)
+    }
+  } else {
+    const outputFile = path.join(options.output ?? '.', 'index.ts')
+    await generateFile(config as ConfigFile, outputFile, !options.hook)
+  }
+
+  const apiFileNodes = createRTKQApiInitializationDeclaration()
+  print(path.join(options.output ?? '.', 'api.ts'), apiFileNodes)
+}
+
+async function generateFile(
+  config: ConfigFile,
+  outputFile: string,
+  onlyTypeAlias: boolean
+) {
+  const code = (await generateEndpoints(config)) as string
+  const nodes = traverse(code, outputFile, onlyTypeAlias)
+
+  print(outputFile, nodes)
 }
 
 function traverse(
-  sourceFile: ts.SourceFile,
-  models: string[],
-  outDir?: string
-) {
-  const typeDefinitionsMap = new Map<string, ts.Node[]>()
-  const streamMap = new Map<string, fs.WriteStream>()
+  code: string,
+  outputFile: string,
+  onlyTypeAlias: boolean
+): ts.Node[] {
+  const sourceFile = ts.createSourceFile(
+    path.basename(outputFile),
+    code,
+    ts.ScriptTarget.ESNext
+  )
 
-  models.concat(defaultModelFile).forEach(i => {
-    const dir = path.resolve(process.cwd(), outDir ?? '.')
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir)
-    }
-    const filePath = path.resolve(dir, `${i}.ts`)
-    streamMap.set(i, fs.createWriteStream(filePath))
-    typeDefinitionsMap.set(i, [] as ts.Node[])
-  })
-
-  traverseNode(sourceFile)
+  const result = [] as ts.Node[]
 
   function traverseNode(node: ts.Node) {
-    if (ts.isTypeAliasDeclaration(node)) {
-      const name = node.name.escapedText
-      const target = models.find(m => name.toString().toLowerCase().includes(m))
-      let s = typeDefinitionsMap.get(defaultModelFile)!
-      if (target) {
-        s = typeDefinitionsMap.get(target)!
-      }
-      s.push(node)
+    if (onlyTypeAlias && ts.isTypeAliasDeclaration(node)) {
+      result.push(node)
+    } else {
+      result.push(node)
     }
-
-    ts.forEachChild(node, traverseNode)
   }
 
-  typeDefinitionsMap.forEach((v, k) => {
-    if (v.length > 0) {
-      // TODO search and import other declaration
-      print(streamMap.get(k)!, v)
-    }
-  })
-
-  streamMap.forEach(i => i.close())
-  streamMap.clear()
-  typeDefinitionsMap.clear()
+  ts.forEachChild(sourceFile, traverseNode)
+  return result
 }
 
-function print(stream: fs.WriteStream, nodes: ts.Node[]) {
+function print(outputFile: string, nodes: ts.Node[]) {
+  const dir = path.dirname(outputFile)
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true })
+  }
+  const stream = fs.createWriteStream(outputFile, {
+    encoding: 'utf8',
+  })
+
   const printer = ts.createPrinter({
     newLine:
       os.EOL === '\n'
@@ -87,7 +107,7 @@ function print(stream: fs.WriteStream, nodes: ts.Node[]) {
   })
 
   const resultFile = ts.createSourceFile(
-    '.temp.ts',
+    path.basename(outputFile),
     '',
     ts.ScriptTarget.Latest,
     false,
@@ -98,4 +118,87 @@ function print(stream: fs.WriteStream, nodes: ts.Node[]) {
     stream.write(printer.printNode(ts.EmitHint.Unspecified, n, resultFile))
     stream.write('\n\n')
   })
+}
+
+function createRTKQApiInitializationDeclaration(): ts.Node[] {
+  const { factory } = ts
+  return [
+    factory.createImportDeclaration(
+      undefined,
+      undefined,
+      factory.createImportClause(
+        false,
+        undefined,
+        factory.createNamedImports([
+          factory.createImportSpecifier(
+            undefined,
+            factory.createIdentifier('createApi')
+          ),
+          factory.createImportSpecifier(
+            undefined,
+            factory.createIdentifier('fetchBaseQuery')
+          ),
+        ])
+      ),
+      factory.createStringLiteral('@reduxjs/toolkit/query/react')
+    ),
+
+    factory.createVariableStatement(
+      [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+      factory.createVariableDeclarationList(
+        [
+          factory.createVariableDeclaration(
+            factory.createIdentifier('api'),
+            undefined,
+            undefined,
+            factory.createCallExpression(
+              factory.createIdentifier('createApi'),
+              undefined,
+              [
+                factory.createObjectLiteralExpression(
+                  [
+                    factory.createPropertyAssignment(
+                      factory.createIdentifier('baseQuery'),
+                      factory.createCallExpression(
+                        factory.createIdentifier('fetchBaseQuery'),
+                        undefined,
+                        [
+                          factory.createObjectLiteralExpression(
+                            [
+                              factory.createPropertyAssignment(
+                                factory.createIdentifier('baseUrl'),
+                                factory.createStringLiteral('/')
+                              ),
+                            ],
+                            false
+                          ),
+                        ]
+                      )
+                    ),
+                    factory.createPropertyAssignment(
+                      factory.createIdentifier('endpoints'),
+                      factory.createArrowFunction(
+                        undefined,
+                        undefined,
+                        [],
+                        undefined,
+                        factory.createToken(
+                          ts.SyntaxKind.EqualsGreaterThanToken
+                        ),
+                        factory.createParenthesizedExpression(
+                          factory.createObjectLiteralExpression([], false)
+                        )
+                      )
+                    ),
+                  ],
+                  true
+                ),
+              ]
+            )
+          ),
+        ],
+        ts.NodeFlags.Const
+      )
+    ),
+  ]
 }
